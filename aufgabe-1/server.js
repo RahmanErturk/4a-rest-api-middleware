@@ -6,23 +6,24 @@ app.use(express.json());
 
 app.use((req, res, next) => {
   console.log(req.method, req.url);
+
   next();
 });
 
-app.use("/courses", (req, res, next) => {
-  console.log("Middleware für courses");
-  next();
-});
+// app.use("/courses", (req, res, next) => {
+//   console.log("Middleware für courses");
+//   next();
+// });
 
-app.get("*", (req, res, next) => {
-  console.log("Middleware für GET");
-  next();
-});
+// app.get("*", (req, res, next) => {
+//   console.log("Middleware für GET");
+//   next();
+// });
 
-app.get("/courses", (req, res, next) => {
-  console.log("Middleware für GET /courses");
-  next();
-});
+// app.get("/courses", (req, res, next) => {
+//   console.log("Middleware für GET /courses");
+//   next();
+// });
 
 const server = app.listen(3000, () => console.log("listening on port 3000"));
 
@@ -31,27 +32,24 @@ const courseInfos = {
   participants: [
     {
       id: 1,
-      name: "Benjamin Meyer",
-      age: 22,
-      course: "DCI Online Marketing",
+      firstName: "Shannah",
+      lastName: "Curton",
+      email: "scurton0@weather.com",
+      age: 46,
     },
     {
       id: 2,
-      name: "Rahman Ertürk",
-      age: 26,
-      course: "DCI Webentwicklung",
+      firstName: "Arvie",
+      lastName: "Stading",
+      email: "astading1@drupal.org",
+      age: 39,
     },
     {
       id: 3,
-      name: "Vural Colak",
-      age: 31,
-      course: "DCI Webentwicklung",
-    },
-    {
-      id: 4,
-      name: "Hüseyin Günaydabcin",
-      age: 35,
-      course: "DCI Test-Automation",
+      firstName: "Cassandry",
+      lastName: "Parcells",
+      email: "cparcells2@foxnews.com",
+      age: 23,
     },
   ],
   modules: [
@@ -62,6 +60,7 @@ const courseInfos = {
   ],
 };
 
+let lastID = 3;
 // ==================================================
 
 app.get("/courses", (req, res) => {
@@ -98,11 +97,25 @@ app.get("/participants", (req, res) => {
   res.send(courseInfos.participants);
 });
 
-app.post("/participants", (req, res) => {
+app.post("/participants", (req, res, next) => {
+  if (
+    !req.body.firstName ||
+    !req.body.lastName ||
+    !req.body.email ||
+    !req.body.age
+  ) {
+    return next(new Error("Some data is missing!"));
+  }
+
+  if (req.body.age < 18) return next(new Error("Invalid age!"));
+
+  lastID++;
+
   courseInfos.participants.push({
-    id: courseInfos.participants.length + 1,
     ...req.body,
+    id: lastID,
   });
+
   res.status(201).send();
 });
 
@@ -152,9 +165,17 @@ app.delete("/modules/:id", (req, res) => {
   res.status(204).end();
 });
 
-// ==================================================
+app.use((req, res) => {
+  console.error(`${req.url} not found`);
+  res.status(404).end();
+});
 
-// =============== Aufgabe 2 ==================
+app.use((error, req, res, next) => {
+  console.log(error);
+  res.status(400).json(error.message);
+});
+
+// ==================================================
 
 /**
  * Produkte
